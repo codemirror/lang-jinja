@@ -1,12 +1,14 @@
 @precedence {
+  subscript
   call
-  unary
+  concat @left
   mult @left
   add @left
   compare @left
   contains @left
   in @left
   is @left
+  not
   logicAnd @left
   logicOr @left
   if @left
@@ -17,7 +19,7 @@
 
 @top Template { element* }
 
-element { Text | Interpolation | statement | Tag | setTag | importTag | Comment }
+element { Text | Interpolation | statement | Tag | setTag | importTag | includeTag | Comment }
 
 Text { (!eager text)+ }
 
@@ -25,20 +27,20 @@ statement[@isGroup=Statement] {
   IfStatement { kwTag1<"if"> (element | kwTag1<"elif">)* (kwTag<"else"> element*)? kwTagEnd<"endif"> } |
   ForStatement { forTag element* (kwTag<"else"> element*)? kwTagEnd<"endfor"> } |
   RawStatement { kwTag<"raw"> RawText { rawText+ } endrawTag } |
-  BlockStatement { blockTag element* kwTagEnd<"endblock"> } |
+  BlockStatement { blockTag element* endBlockTag } |
   MacroStatement { macroTag element* kwTagEnd<"endmacro"> } |
   CallStatement { callTag element* kwTagEnd<"endcall"> } |
   FilterStatement { kwTag1<"filter"> element* kwTagEnd<"endfilter"> } |
   SetStatement { setOpenTag element* kwTagEnd<"endset"> } |
-  TransStatement { transTag element* (kwTag1<"pluralize"> element*)? kwTagEnd<"trans"> } |
-  WithStatement { kwTag<"with"> element* kwTagEnd<"endwith"> } |
+  TransStatement { transTag element* (kwTag1<"pluralize"> element*)? kwTagEnd<"endtrans"> } |
+  WithStatement { withTag element* kwTagEnd<"endwith"> } |
   AutoescapeStatement { kwTag1<"autoescape"> element* kwTagEnd<"endautoescape"> }
 }
 
-Comment { commentTagStart CommentText { commentText+ } commentTagEnd }
+Comment { commentTagStart commentText+ commentTagEnd }
 
 @skip { space } {
-  forTag[@name=Tag] { tagStart tagName<"for"> Definition ("," Definition)* kw<"in"> expression tagEnd }
+  forTag[@name=Tag] { tagStart tagName<"for"> Definition ("," Definition)* kw<"in"> expression kw<"recursive">? tagEnd }
 
   blockTag[@name=Tag] { tagStart tagName<"block"> Definition kw<"scoped">? kw<"required">? tagEnd }
 
@@ -50,6 +52,8 @@ Comment { commentTagStart CommentText { commentText+ } commentTagEnd }
 
   setOpenTag[@name=Tag] { tagStart tagName<"set"> Definition tagEnd }
 
+  withTag[@name=Tag] { tagStart tagName<"with"> commaSep<Definition ("," Definition)* AssignOp expression> tagEnd }
+
   importTag[@name=Tag] {
     tagStart (
       tagName<"import"> expression kw<"as"> Definition |
@@ -59,7 +63,13 @@ Comment { commentTagStart CommentText { commentText+ } commentTagEnd }
 
   ImportItem { Definition | VariableName kw<"as"> Definition }
 
+  includeTag[@name=Tag] {
+    tagStart tagName<"include"> expression (kw<"ignore"> kw<"missing">)? ((kw<"with"> | kw<"without">) kw<"context">)? tagEnd
+  }
+
   transTag[@name=Tag] { tagStart tagName<"trans"> (Definition AssignOp expression ("," Definition AssignOp expression)*)? tagEnd }
+
+  endBlockTag[@name=EndTag] { endTagStart tagName<"endblock"> Definition? tagEnd }
 
   endrawTag[@name=EndTag] { endrawTagStart tagName<"endraw"> tagEnd }
 
@@ -68,9 +78,10 @@ Comment { commentTagStart CommentText { commentText+ } commentTagEnd }
   
   expression[@isGroup=Expression] {
     VariableName |
-    MemberExpression { expression "." PropertyName } |
-    SubscriptExpression { expression "[" expression "]" } |
+    MemberExpression { expression !subscript "." PropertyName } |
+    SubscriptExpression { expression !subscript "[" expression "]" } |
     BinaryExpression {
+      expression !concat ConcatOp expression |
       expression !mult multOp expression |
       expression !add addOp expression |
       expression !compare CompareOp expression |
@@ -79,7 +90,7 @@ Comment { commentTagStart CommentText { commentText+ } commentTagEnd }
       expression !logicAnd kw<"and"> expression |      
       expression !logicOr kw<"or"> expression
     } |
-    NotExpression { kw<"not"> !unary expression } |
+    NotExpression { kw<"not"> !not expression } |
     FilterExpression { expression !filter "|" expression } |
     ConditionalExpression { expression !if kw<"if"> expression (!else kw<"else"> expression)? } |
     CallExpression { expression !call ArgumentList } |
@@ -97,9 +108,9 @@ Comment { commentTagStart CommentText { commentText+ } commentTagEnd }
 
   Tag { tagStart TagName expression? tagEnd }
 
-  ParamList { "(" commaSep<Parameter { Definition (AssignOp expression)? }> ")" }
+  ParamList { "(" commaSep<Definition | OptionalParameter { Definition AssignOp expression }> ")" }
 
-  ArgumentList { "(" commaSep<Argument { expression | VariableName AssignOp expression }> ")" }
+  ArgumentList { "(" commaSep<expression | NamedArgument { VariableName AssignOp expression }> ")" }
 
   kw<word> { @specialize[@name={word}]<identifier, word> }
   tagName<word> { @specialize[@name={word}]<TagName, word> }
@@ -151,6 +162,7 @@ Comment { commentTagStart CommentText { commentText+ } commentTagEnd }
   CompareOp { "!=" | "==" | $[<>] "="? }
   multOp[@name=ArithOp] { "/" | "//" | "%" | "*" | "**" }
   addOp[@name=ArithOp] { "+" | "-" }
+  ConcatOp { "~" }
   AssignOp { "=" }
 
   @precedence { NumberLiteral addOp "." }

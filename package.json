@@ -33,7 +33,8 @@
     "@lezer/highlight": "^1.2.0"
   },
   "devDependencies": {
-    "@codemirror/buildhelper": "^1.0.0"
+    "@codemirror/buildhelper": "^1.0.0",
+    "@lezer/generator": "^1.7.0"
   },
   "repository": {
     "type": "git",
