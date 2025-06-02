@@ -5,8 +5,8 @@ import {styleTags, tags as t} from "@lezer/highlight"
 import {parseMixed} from "@lezer/common"
 import {parser} from "./jinja.grammar"
 
-//import {jinjaCompletionSource, JinjaCompletionConfig, closePercentBrace} from "./complete"
-//export {jinjaCompletionSource, JinjaCompletionConfig, closePercentBrace}
+import {jinjaCompletionSource, JinjaCompletionConfig, closePercentBrace} from "./complete"
+export {jinjaCompletionSource, JinjaCompletionConfig, closePercentBrace}
 
 function statementIndent(except: RegExp) {
   return (context: TreeIndentContext) => {
@@ -25,7 +25,7 @@ const tagLanguage = LRLanguage.define({
         "self": t.self,
         "loop super": t.standard(t.variableName),
         "if elif else endif for endfor call endcall": t.controlKeyword,
-        "block endblock set endset macro endmacro import from": t.definitionKeyword,
+        "block endblock set endset macro endmacro import from include": t.definitionKeyword,
         "Comment/...": t.blockComment,
         "VariableName": t.variableName,
         "Definition": t.definition(t.variableName),
@@ -78,7 +78,7 @@ function makeJinja(base: Language) {
 export const jinjaLanguage = makeJinja(baseHTML.language)
 
 /// Jinja template support.
-export function jinja(config: {//JinjaCompletionConfig & {
+export function jinja(config: JinjaCompletionConfig & {
   /// Provide an HTML language configuration to use as a base.
   base?: LanguageSupport
 } = {}) {
@@ -86,8 +86,8 @@ export function jinja(config: {//JinjaCompletionConfig & {
   let lang = base.language == baseHTML.language ? jinjaLanguage : makeJinja(base.language)
   return new LanguageSupport(lang, [
     base.support,
-//    lang.data.of({autocomplete: jinjaCompletionSource(config)}),
+    lang.data.of({autocomplete: jinjaCompletionSource(config)}),
     base.language.data.of({closeBrackets: {brackets: ["{"]}}),
-//    closePercentBrace
+    closePercentBrace
   ])
 }
