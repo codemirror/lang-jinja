@@ -1,10 +1,8 @@
 import {ExternalTokenizer} from "@lezer/lr"
-import {interpolationStart, tagStart, endTagStart, commentTagStart, text, rawText, endrawTagStart} from "./jinja.grammar.terms"
+import {interpolationStart, tagStart, commentTagStart, text, rawText, endrawTagStart} from "./jinja.grammar.terms"
 
 const enum Ch {
-  BraceL = 123, BraceR = 125, Percent = 37, Dash = 45, Hash = 35,
-  Space = 32, Newline = 10,
-  e = 101, n = 110, d = 100
+  BraceL = 123, BraceR = 125, Percent = 37, Dash = 45, Hash = 35, Space = 32, Newline = 10
 }
 
 function wordChar(code: number) {
@@ -43,8 +41,7 @@ export const base = new ExternalTokenizer(input => {
           } else if (next == Ch.Dash && size == 2) {
             size = ++scan
           } else {
-            let end = next == Ch.e && input.peek(scan + 1) == Ch.n && input.peek(scan + 2) == Ch.d
-            input.acceptToken(end ? endTagStart : tagStart, size)
+            input.acceptToken(tagStart, size)
             return
           }
         }
