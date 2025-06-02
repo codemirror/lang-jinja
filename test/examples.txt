@@ -14,7 +14,7 @@ Template(Comment, Text)
 
 ==>
 
-Template(Interpolation(VariableName), Text, Interpolation(FilterExpression(VariableName, VariableName)))
+Template(Interpolation(VariableName), Text, Interpolation(FilterExpression(VariableName, FilterOp, FilterName)))
 
 # If
 
@@ -45,7 +45,7 @@ Template(
     EndTag(endfor)),
   Text,
   ForStatement(
-    Tag(for,Definition,Definition,in,FilterExpression(VariableName, VariableName)),
+    Tag(for,Definition,Definition,in,FilterExpression(VariableName, FilterOp, FilterName)),
     Interpolation(MemberExpression(loop, PropertyName)),
     EndTag(endfor)),
   Text,
@@ -120,10 +120,14 @@ Template(
 # Filter
 
 {% filter upper %}aaah{% endfilter %}
+{% filter join(",") %}...{% endfilter %}
 
 ==>
 
-Template(FilterStatement(Tag(filter, VariableName), Text, EndTag(endfilter)))
+Template(
+  FilterStatement(Tag(filter, FilterName), Text, EndTag(endfilter)),
+  Text,
+  FilterStatement(Tag(filter, FilterCall(FilterName, ArgumentList(StringLiteral))), Text, EndTag(endfilter)))
 
 # Assignment
 

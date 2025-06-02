@@ -16,15 +16,15 @@ const Filters = completions(
   "wordwrap xmlattr", "function")
 
 const Functions = completions(
-  "boolean callable defined divisibleby eq escaped even false filter float ge gt in integer " +
-  "iterable le lower lt mapping ne none number odd sameas sequence string test true undefined " +
+  "boolean callable defined divisibleby eq escaped even filter float ge gt in integer " +
+  "iterable le lower lt mapping ne none number odd sameas sequence string test undefined " +
   "upper range lipsum dict joiner namespace", "function")
 
 const Globals = completions(
   "loop super self true false varargs kwargs caller name arguments catch_kwargs catch_varargs caller",
   "keyword")
 
-const Expressions = Filters.concat(Functions).concat(Globals)
+const Expressions = Functions.concat(Globals)
 
 const Tags = completions(
   "raw endraw filter endfilter trans pluralize endtrans with endwith autoescape endautoescape " +
@@ -35,6 +35,10 @@ function findContext(context: CompletionContext): {type: string, node?: SyntaxNo
   let {state, pos} = context
   let node = syntaxTree(state).resolveInner(pos, -1).enterUnfinishedNodesBefore(pos)
   let before = node.childBefore(pos)?.name || node.name
+  if (node.name == "FilterName")
+    return {type: "filter", node}
+  if (context.explicit && (before == "FilterOp" || before == "filter"))
+    return {type: "filter"}
   if (node.name == "TagName")
     return {type: "tag", node}
   if (context.explicit && before == "{%")
@@ -100,7 +104,8 @@ export function jinjaCompletionSource(config: JinjaCompletionConfig = {}) {
     if (!cx) return null
     let from = cx.from ?? (cx.node ? cx.node.from : context.pos)
     let options
-    if (cx.type == "tag") options = tags
+    if (cx.type == "filter") options = Filters
+    else if (cx.type == "tag") options = tags
     else if (cx.type == "expr") options = exprs
     else /* prop */ options = properties ? resolveProperties(context.state, cx.target!, context, properties) : []
     return options.length ? {options, from, validFor: /^[\w\u00c0-\uffff]*$/} : null
