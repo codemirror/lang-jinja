@@ -8,7 +8,7 @@ import {parser} from "./jinja.grammar"
 //import {jinjaCompletionSource, JinjaCompletionConfig, closePercentBrace} from "./complete"
 //export {jinjaCompletionSource, JinjaCompletionConfig, closePercentBrace}
 
-function directiveIndent(except: RegExp) {
+function statementIndent(except: RegExp) {
   return (context: TreeIndentContext) => {
     let back = except.test(context.textAfter)
     return context.lineIndent(context.node.from) + (back ? 0 : context.unit)
@@ -27,7 +27,7 @@ const tagLanguage = LRLanguage.define({
         "if elif else endif for endfor call endcall": t.controlKeyword,
         "true false": t.bool,
         "block endblock set endset macro endmacro import from": t.definitionKeyword,
-        "Comment": t.blockComment,
+        "Comment/...": t.blockComment,
         "VariableName": t.variableName,
         "Definition": t.definition(t.variableName),
         "PropertyName": t.propertyName,
@@ -44,18 +44,16 @@ const tagLanguage = LRLanguage.define({
         ".": t.derefOperator,
         ": , .": t.punctuation,
       }),
-      indentNodeProp.add({ // FIXME
+      indentNodeProp.add({
         Tag: delimitedIndent({closing: "%}"}),
-        "UnlessDirective ForDirective TablerowDirective CaptureDirective":
-          directiveIndent(/^\s*(\{%-?\s*)?end\w/),
-        IfDirective: directiveIndent(/^\s*(\{%-?\s*)?(endif|else|elsif)\b/),
-        CaseDirective: directiveIndent(/^\s*(\{%-?\s*)?(endcase|when)\b/),
+        "IfStatement ForStatement": statementIndent(/^\s*(\{%-?\s*)?(endif|endfor|else|elif)\b/),
+        "Statement": statementIndent(/^\s*(\{%-?\s*)?end\w/),
       }),
-      foldNodeProp.add({ // FIXME
-        "UnlessDirective ForDirective TablerowDirective CaptureDirective IfDirective CaseDirective RawDirective Comment"(tree) {
+      foldNodeProp.add({
+        "Statement Comment"(tree) {
           let first = tree.firstChild, last = tree.lastChild!
-          if (!first || first.name != "Tag") return null
-          return {from: first.to, to: last.name == "EndTag" ? last.from : tree.to}
+          if (!first || first.name != "Tag" && first.name != "{#") return null
+          return {from: first.to, to: last.name == "EndTag" || last.name == "#}" ? last.from : tree.to}
         }
       })
     ]

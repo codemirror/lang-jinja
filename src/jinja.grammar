@@ -17,12 +17,11 @@
 
 @top Template { element* }
 
-element { Text | Interpolation | statement | Comment }
+element { Text | Interpolation | statement | Tag | setTag | importTag | Comment }
 
 Text { (!eager text)+ }
 
-statement {
-  Tag |
+statement[@isGroup=Statement] {
   IfStatement { kwTag1<"if"> (element | kwTag1<"elif">)* (kwTag<"else"> element*)? kwTagEnd<"endif"> } |
   ForStatement { forTag element* (kwTag<"else"> element*)? kwTagEnd<"endfor"> } |
   RawStatement { kwTag<"raw"> RawText { rawText+ } endrawTag } |
@@ -30,9 +29,7 @@ statement {
   MacroStatement { macroTag element* kwTagEnd<"endmacro"> } |
   CallStatement { callTag element* kwTagEnd<"endcall"> } |
   FilterStatement { kwTag1<"filter"> element* kwTagEnd<"endfilter"> } |
-  setTag |
   SetStatement { setOpenTag element* kwTagEnd<"endset"> } |
-  importTag |
   TransStatement { transTag element* (kwTag1<"pluralize"> element*)? kwTagEnd<"trans"> } |
   WithStatement { kwTag<"with"> element* kwTagEnd<"endwith"> } |
   AutoescapeStatement { kwTag1<"autoescape"> element* kwTagEnd<"endautoescape"> }
