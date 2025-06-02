@@ -51,10 +51,10 @@ function findContext(context: CompletionContext): {type: string, node?: SyntaxNo
     return {type: "prop", target: node}
   if (node.name == "VariableName")
     return {type: "expr", from: node.from}
+  if (node.name == "Comment" || node.name == "StringLiteral" || node.name == "NumberLiteral") return null
   let word = context.matchBefore(/[\w\u00c0-\uffff]+$/)
   if (word) return {type: "expr", from: word.from}
-  if (context.explicit && node.name != "Comment" && node.name != "StringLiteral" && node.name != "NumberLiteral")
-    return {type: "expr"}
+  if (context.explicit) return {type: "expr"}
   return null
 }
 
