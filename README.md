@@ -2,7 +2,7 @@
 
 # @codemirror/lang-jinja [![NPM version](https://img.shields.io/npm/v/@codemirror/lang-jinja.svg)](https://www.npmjs.org/package/@codemirror/lang-jinja)
 
-[ [**WEBSITE**](https://codemirror.net/) | [**ISSUES**](https://github.com/codemirror/dev/issues) | [**FORUM**](https://discuss.codemirror.net//) | [**CHANGELOG**](https://github.com/codemirror/lang-jinja/blob/main/CHANGELOG.md) ]
+[ [**WEBSITE**](https://codemirror.net/) | [**ISSUES**](https://github.com/codemirror/dev/issues) | [**FORUM**](https://discuss.codemirror.net/) | [**CHANGELOG**](https://github.com/codemirror/lang-jinja/blob/main/CHANGELOG.md) ]
 
 This package implements [Jinja
 template](https://jinja.palletsprojects.com/en/stable/templates/)
